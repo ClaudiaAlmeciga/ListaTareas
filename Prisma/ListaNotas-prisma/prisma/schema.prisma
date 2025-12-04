@@ -1,0 +1,122 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["usuario", "agenda"]
+}
+
+/// =======================
+/// MODELO USUARIO
+/// =======================
+model Usuario {
+  id                Int       @id @default(autoincrement())
+  nombre            String
+  apellido          String
+  email             String    @unique
+  contrasena        String    @db.VarChar(10)
+  fechaCreacion     DateTime  @default(now()) @map("fecha_creacion")
+  fechaModificacion DateTime  @default(now()) @map("fecha_modificacion")
+
+  // Relaciones
+  notas   Nota[]
+  perfil  Perfil?
+
+  @@schema("usuario")
+  @@map("usuario") // tabla usuario.usuario
+}
+
+/// =======================
+/// PERFIL (1:1 con Usuario)
+/// =======================
+model Perfil {
+  id                Int       @id @default(autoincrement())
+  idUsuario         Int       @unique @map("id_usuario")
+  nombre            String?   @db.VarChar(255)
+  fotoPerfil        String?   @db.VarChar(255) @map("foto_perfil")
+  fechaNacimiento   DateTime? @map("fecha_nacimiento")
+  telefono          String?   @db.VarChar(20)
+  direccion         String?   @db.VarChar(255)
+  fechaCreacion     DateTime  @default(now()) @map("fecha_creacion")
+  fechaModificacion DateTime  @default(now()) @map("fecha_modificacion")
+
+  usuario Usuario @relation(fields: [idUsuario], references: [id])
+
+  @@schema("usuario")
+  @@map("perfil")
+}
+
+/// =======================
+/// ESTADO
+/// =======================
+model Estado {
+  id                Int      @id @default(autoincrement())
+  nombre            String   @unique @db.VarChar(50)
+  fechaCreacion     DateTime @default(now()) @map("fecha_creacion")
+  fechaModificacion DateTime @default(now()) @map("fecha_modificacion")
+
+  notas Nota[]
+
+  @@schema("agenda")
+  @@map("estado")
+}
+
+/// =======================
+/// NOTA
+/// =======================
+model Nota {
+  id                Int       @id @default(autoincrement())
+  idUsuario         Int       @map("id_usuario")
+  titulo            String    @db.VarChar(100)
+  descripcion       String    @db.VarChar(100)
+  fechaCreacion     DateTime  @default(now()) @map("fecha_creacion")
+  fechaModificacion DateTime  @default(now()) @map("fecha_modificacion")
+  fechaAlerta       DateTime  @default(now()) @map("fecha_alerta")
+  idEstado          Int       @map("id_estado")
+
+  // Relaciones
+  usuario Usuario @relation(fields: [idUsuario], references: [id])
+  estado  Estado  @relation(fields: [idEstado], references: [id])
+
+  etiquetas NotaEtiqueta[]
+
+  @@schema("agenda")
+  @@map("nota")
+}
+
+/// =======================
+/// ETIQUETA
+/// =======================
+model Etiqueta {
+  id                Int       @id @default(autoincrement())
+  nombre            String    @unique @db.VarChar(50)
+  fechaCreacion     DateTime  @default(now()) @map("fecha_creacion")
+  fechaModificacion DateTime  @default(now()) @map("fecha_modificacion")
+
+  notas NotaEtiqueta[]
+
+  @@schema("agenda")
+  @@map("etiqueta")
+}
+
+/// =======================
+/// TABLA INTERMEDIA NOTA_ETIQUETA (N:N)
+/// =======================
+model NotaEtiqueta {
+  idNota     Int @map("id_nota")
+  idEtiqueta Int @map("id_etiqueta")
+
+  nota     Nota     @relation(fields: [idNota], references: [id])
+  etiqueta Etiqueta @relation(fields: [idEtiqueta], references: [id])
+
+  @@id([idNota, idEtiqueta])
+  @@schema("agenda")
+  @@map("nota_etiqueta")
+}
