@@ -5,12 +5,15 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["usuario", "agenda"]
+  schemas  = ["usuario", "agenda", "public"]
+
+
 }
 
 /// =======================
@@ -21,7 +24,7 @@ model Usuario {
   nombre            String
   apellido          String
   email             String    @unique
-  contrasena        String    @db.VarChar(10)
+  contrasena        String    @db.VarChar(255)
   fechaCreacion     DateTime  @default(now()) @map("fecha_creacion")
   fechaModificacion DateTime  @default(now()) @map("fecha_modificacion")
 
